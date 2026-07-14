@@ -384,9 +384,19 @@ a:focus-visible {
 
 .tc-agenda__title {
   color: var(--tc-text);
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tc-agenda__title:hover {
+  text-decoration: underline;
 }
 
 .tc-agenda__empty {
@@ -458,6 +468,17 @@ a:focus-visible {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--tc-text-dim);
+}
+
+.tc-modal__field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.tc-modal__field--inline input[type="checkbox"] {
+  width: auto;
+  margin: 0;
 }
 
 .tc-modal input[type="text"],
