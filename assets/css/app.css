@@ -118,6 +118,16 @@ a {
   gap: calc(var(--tc-gap) / 2);
 }
 
+/* Fixed width + centered so changing months never shifts the ‹ › arrows. */
+.tc-header__label {
+  font-family: var(--tc-font-mono);
+  font-size: 0.9rem;
+  color: var(--tc-text);
+  text-align: center;
+  min-width: 15ch;
+  white-space: nowrap;
+}
+
 .tc-header__search {
   flex: 1 1 150px;
   min-width: 120px;
