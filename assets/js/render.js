@@ -4,9 +4,14 @@ import { eventsForDate, agenda } from './model.js';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+// Category colors are rendered into CSS (background / var(--cat)). Restrict them
+// to hex literals so a committed value like `url(https://evil/beacon)` cannot turn
+// an event pill into an external-fetch tracking beacon.
+const SAFE_COLOR = /^#[0-9a-fA-F]{3,8}$/;
+
 export function categoryColor(model, id) {
   const cat = (model.categories || []).find(c => c.id === id);
-  return cat ? cat.color : 'var(--tc-text-dim)';
+  return cat && SAFE_COLOR.test(cat.color) ? cat.color : 'var(--tc-text-dim)';
 }
 
 function el(tag, cls, text) {
