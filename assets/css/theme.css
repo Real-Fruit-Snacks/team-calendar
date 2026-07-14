@@ -1,0 +1,40 @@
+/* assets/css/theme.css — Terminal Workbench design tokens */
+:root {
+  --tc-font-mono: ui-monospace, "Terminal Workbench Mono", "SF Mono", Menlo, Consolas, monospace;
+  --tc-font-ui: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --tc-radius: 6px;
+  --tc-gap: 8px;
+
+  /* Dark (default) — graphite surfaces */
+  --tc-bg: #14171c;
+  --tc-surface: #1b1f26;
+  --tc-surface-2: #232832;
+  --tc-border: #2c333d;
+  --tc-text: #d7dce3;
+  --tc-text-dim: #8b95a3;
+  --tc-accent: #6cb6ff;      /* ANSI-style primary */
+  --tc-accent-warm: #e5a05a; /* warm secondary */
+  --tc-today: #223047;
+  --tc-danger: #e5534b;
+}
+
+:root[data-theme="light"] {
+  --tc-bg: #f4f5f7;
+  --tc-surface: #ffffff;
+  --tc-surface-2: #eceef1;
+  --tc-border: #d5d9df;
+  --tc-text: #1b1f26;
+  --tc-text-dim: #5b6472;
+  --tc-accent: #1f6feb;
+  --tc-accent-warm: #b06a1c;
+  --tc-today: #dbe7fb;
+  --tc-danger: #cf322a;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --tc-bg: #f4f5f7; --tc-surface: #ffffff; --tc-surface-2: #eceef1;
+    --tc-border: #d5d9df; --tc-text: #1b1f26; --tc-text-dim: #5b6472;
+    --tc-accent: #1f6feb; --tc-accent-warm: #b06a1c; --tc-today: #dbe7fb; --tc-danger: #cf322a;
+  }
+}
