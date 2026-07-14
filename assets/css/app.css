@@ -79,11 +79,20 @@ a {
 .tc-app {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
-  max-width: 1080px;
+  min-height: 100vh;
+  max-width: 1600px;
   margin: 0 auto;
   padding: var(--tc-gap);
   gap: var(--tc-gap);
+}
+
+/* Content area fills the space below the header; the month grid stretches to
+   fill it so the calendar uses the screen instead of leaving a gap below. */
+.tc-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* -------------------------------------------------------------- */
@@ -358,8 +367,10 @@ a:focus-visible {
 }
 
 .tc-grid {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: auto repeat(6, 1fr);
   gap: 1px;
   background: var(--tc-border);
   border: 1px solid var(--tc-border);
@@ -741,18 +752,20 @@ a:focus-visible {
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
+.tc-dropdown__button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
 .tc-dropdown__menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 20;
+  position: fixed;
+  z-index: 200;
   background: var(--tc-surface);
   border: 1px solid var(--tc-border);
   border-radius: var(--tc-radius);
   box-shadow: 0 8px 24px color-mix(in srgb, var(--tc-bg) 70%, transparent);
   padding: 4px;
-  max-height: 220px;
+  max-height: 260px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -769,11 +782,15 @@ a:focus-visible {
   font-size: 0.82rem;
   padding: 7px 8px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .tc-dropdown__item:hover {
   background: var(--tc-surface-2);
-  color: var(--tc-accent);
+}
+
+.tc-dropdown__item--selected {
+  background: var(--tc-today);
 }
 
 /* -------------------------------------------------------------- */
