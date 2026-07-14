@@ -21,9 +21,13 @@ build step, no database.
 
 - In-browser editing — create, edit, and delete events without leaving the page
 - Per-user Personal Access Token (PAT) access model — no shared credentials
-- Three themes — dark, light, and **workbench** (matches the [Terminal Workbench design system](https://github.com/Real-Fruit-Snacks/terminal-workbench-design-system)); cycle with the theme button
-- Month and agenda views
+- Month and agenda views, with a **month/year quick-picker** (click the date to jump anywhere)
+- **Live search** across both views — matches event titles, descriptions, categories, and custom field values
+- **Event templates** — shared, reusable presets that pre-fill a new event (managed in-app)
+- **Custom fields** — templates can define their own fields (short text, long text, link, dropdown); values show on hover and are searchable
+- **Hover details** — point at any event for a popover with its full details
 - Category colors for at-a-glance scanning
+- Three themes — dark, light, and **workbench** (matches the [Terminal Workbench design system](https://github.com/Real-Fruit-Snacks/terminal-workbench-design-system)); cycle with the theme button
 - Runs on **GitHub Pages** and **GitLab Pages**
 - Offline / air-gapped hostable — no external services required
 - Full edit history via git — every change is a real commit
@@ -83,13 +87,26 @@ instances too.
 
 ## Data format
 
-Events and categories live in `events.json`:
+Categories, templates, and events all live in `events.json`:
 
 ```json
 {
   "version": 1,
   "categories": [
     { "id": "meeting", "label": "Meeting", "color": "#6cb6ff" }
+  ],
+  "templates": [
+    {
+      "id": "tpl_deploy",
+      "name": "Deploy",
+      "category": "deploy",
+      "allDay": true,
+      "description": "Cut the release branch",
+      "fields": [
+        { "id": "fld_ticket", "label": "Ticket", "type": "url", "default": "" },
+        { "id": "fld_priority", "label": "Priority", "type": "select", "options": ["Low", "High"], "default": "Low" }
+      ]
+    }
   ],
   "events": [
     {
@@ -100,11 +117,19 @@ Events and categories live in `events.json`:
       "start": "10:00",
       "end": "10:30",
       "category": "meeting",
-      "description": "Weekly standup"
+      "description": "Weekly standup",
+      "fields": [
+        { "id": "fld_ticket", "label": "Ticket", "type": "url", "value": "https://…" }
+      ]
     }
   ]
 }
 ```
+
+Templates are optional presets. When you create an event from one, its custom
+field definitions are **snapshotted** onto the event (as `fields` with values),
+so editing or deleting a template later never changes existing events. Field
+`type` is one of `text`, `textarea`, `url`, or `select` (with `options`).
 
 ## Architecture
 
@@ -114,12 +139,12 @@ independently-testable pieces:
 | Module | Responsibility |
 | --- | --- |
 | `assets/js/dates.js` | Pure date/calendar-grid math |
-| `assets/js/model.js` | Event/category data model helpers |
+| `assets/js/model.js` | Events, categories, templates, and custom-field helpers (all pure) |
 | `assets/js/host.js` | GitHub/GitLab file API adapters (get/put, base64, token URLs) |
 | `assets/js/store.js` | Load/save orchestration with conflict-retry |
 | `assets/js/token.js` | PAT storage in `localStorage` |
-| `assets/js/render.js` | Month grid and agenda rendering |
-| `assets/js/ui.js` | Modals, token popup, theme toggle |
+| `assets/js/render.js` | Month grid, agenda, search filtering, and hover tooltips |
+| `assets/js/ui.js` | Header, month/year picker, event/template modals, custom dropdown, token popup, themes |
 | `assets/js/app.js` | Wiring/bootstrap |
 
 The pure-logic modules (`dates`, `model`, `host`, `store`, `token`) are unit

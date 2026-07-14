@@ -317,6 +317,45 @@ export function mountHeader(root, opts = {}) {
 /* Event modal                                                         */
 /* ------------------------------------------------------------------ */
 
+// Compact, themed dropdown that renders in-DOM (unlike the oversized native
+// <select> popup). items: [{ label, value }].
+function customDropdown(items, initialLabel, onSelect) {
+  const wrap = el('div', 'tc-dropdown');
+  const button = el('button', 'tc-dropdown__button');
+  button.type = 'button';
+  button.setAttribute('aria-haspopup', 'listbox');
+  button.setAttribute('aria-expanded', 'false');
+  const labelSpan = el('span', 'tc-dropdown__label', initialLabel);
+  button.appendChild(labelSpan);
+  const menu = el('div', 'tc-dropdown__menu');
+  menu.hidden = true;
+  for (const it of items) {
+    const opt = el('button', 'tc-dropdown__item', it.label);
+    opt.type = 'button';
+    opt.addEventListener('click', () => { close(); onSelect(it.value, it.label); });
+    menu.appendChild(opt);
+  }
+  wrap.append(button, menu);
+  function onDoc(e) { if (!wrap.contains(e.target)) close(); }
+  function onKey(e) { if (e.key === 'Escape') { close(); button.focus(); } }
+  function open() {
+    menu.hidden = false;
+    button.setAttribute('aria-expanded', 'true');
+    setTimeout(() => {
+      document.addEventListener('mousedown', onDoc);
+      document.addEventListener('keydown', onKey);
+    }, 0);
+  }
+  function close() {
+    menu.hidden = true;
+    button.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('mousedown', onDoc);
+    document.removeEventListener('keydown', onKey);
+  }
+  button.addEventListener('click', () => (menu.hidden ? open() : close()));
+  return { wrap, setLabel: (t) => { labelSpan.textContent = t; } };
+}
+
 export function openEventModal(root, opts = {}) {
   const { model, event, dateISO, onSave, onDelete, canEdit, onManageTemplates } = opts;
   const isEdit = !!(event && event.id);
@@ -467,29 +506,21 @@ export function openEventModal(root, opts = {}) {
   // "Start from template" — only when creating a new event and able to edit.
   let templateField = null;
   if (!isEdit && editable) {
-    const tplSelect = el('select');
-    const blank = el('option', null, 'Blank event');
-    blank.value = '';
-    tplSelect.appendChild(blank);
-    for (const t of (model && model.templates) || []) {
-      const opt = el('option', null, t.name);
-      opt.value = t.id;
-      tplSelect.appendChild(opt);
-    }
-    const manageOpt = el('option', null, 'Manage templates…');
-    manageOpt.value = '__manage__';
-    tplSelect.appendChild(manageOpt);
-    tplSelect.addEventListener('change', () => {
-      if (tplSelect.value === '__manage__') {
-        tplSelect.value = '';
+    const items = [{ label: 'Blank event', value: '' }];
+    for (const t of (model && model.templates) || []) items.push({ label: t.name, value: t.id });
+    items.push({ label: 'Manage templates…', value: '__manage__' });
+    const dd = customDropdown(items, 'Blank event', (value, label) => {
+      if (value === '__manage__') {
         onManageTemplates && onManageTemplates();
         return;
       }
-      const t = ((model && model.templates) || []).find((x) => x.id === tplSelect.value);
+      dd.setLabel(label);
+      const t = ((model && model.templates) || []).find((x) => x.id === value);
       if (t) applyTemplate(t);
       else { customFields = []; renderCustomFields(); }
     });
-    templateField = field('Start from template', tplSelect);
+    templateField = el('div', 'tc-modal__field');
+    templateField.append(el('label', null, 'Start from template'), dd.wrap);
   }
 
   if (templateField) form.append(templateField);

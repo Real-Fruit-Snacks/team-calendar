@@ -701,6 +701,82 @@ a:focus-visible {
 }
 
 /* -------------------------------------------------------------- */
+/* Custom dropdown (compact, replaces oversized native select)     */
+/* -------------------------------------------------------------- */
+
+.tc-dropdown {
+  position: relative;
+}
+
+.tc-dropdown__button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--tc-surface-2);
+  color: var(--tc-text);
+  border: 1px solid var(--tc-border);
+  border-radius: var(--tc-radius);
+  padding: 6px 10px;
+  cursor: pointer;
+  font-family: var(--tc-font-mono);
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.tc-dropdown__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tc-dropdown__button::after {
+  content: "";
+  flex: none;
+  width: 12px;
+  height: 12px;
+  background-color: var(--tc-text-dim);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.tc-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--tc-surface);
+  border: 1px solid var(--tc-border);
+  border-radius: var(--tc-radius);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--tc-bg) 70%, transparent);
+  padding: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tc-dropdown__item {
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: var(--tc-radius);
+  color: var(--tc-text);
+  font-family: var(--tc-font-mono);
+  font-size: 0.82rem;
+  padding: 7px 8px;
+  cursor: pointer;
+}
+
+.tc-dropdown__item:hover {
+  background: var(--tc-surface-2);
+  color: var(--tc-accent);
+}
+
+/* -------------------------------------------------------------- */
 /* Template manager                                                */
 /* -------------------------------------------------------------- */
 
