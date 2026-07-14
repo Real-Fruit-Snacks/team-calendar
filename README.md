@@ -70,6 +70,9 @@ else saved in between.
 
 ## Self-host on GitLab / offline
 
+**Full step-by-step (including air-gapped GitLab) is in [INSTALL.md](INSTALL.md)**,
+which ships in the release. Quick version:
+
 The app auto-detects its host, but on GitLab you point it at your instance and
 project. Set `config.json` at the repo root:
 

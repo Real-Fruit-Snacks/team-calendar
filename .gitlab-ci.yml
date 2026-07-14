@@ -1,7 +1,15 @@
 # Publishes the repository as-is to GitLab Pages. No build, no dependencies,
 # no internet required — suitable for air-gapped GitLab instances.
+#
+# This job only runs `mkdir` and `cp`, so it needs nothing but a shell:
+#   - On a SHELL-executor runner it works with no container image at all.
+#   - On a DOCKER-executor runner it uses your GitLab's default CI image. If your
+#     air-gapped instance can't pull one, uncomment `image:` below and point it
+#     at any tiny image already present in your registry (e.g. busybox/alpine).
+# See INSTALL.md for full offline deployment steps.
 pages:
   stage: deploy
+  # image: busybox:latest   # uncomment on an air-gapped Docker runner if needed
   script:
     - mkdir -p public
     - cp -r index.html assets events.json config.json public/
