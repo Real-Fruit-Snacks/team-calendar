@@ -9,6 +9,11 @@
   box-sizing: border-box;
 }
 
+/* The [hidden] attribute must always win, even over display:flex containers. */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   height: 100%;
@@ -472,6 +477,15 @@ a:focus-visible {
   flex-direction: row;
   align-items: center;
   gap: 8px;
+  padding: 4px 0;
+}
+
+.tc-modal__field--inline label {
+  text-transform: none;
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  color: var(--tc-text);
+  cursor: pointer;
 }
 
 /* Custom checkbox — no native box. */
