@@ -700,6 +700,58 @@ a:focus-visible {
 }
 
 /* -------------------------------------------------------------- */
+/* Template manager                                                */
+/* -------------------------------------------------------------- */
+
+.tc-tpl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tc-tpl-empty {
+  color: var(--tc-text-dim);
+  font-family: var(--tc-font-mono);
+  font-size: 0.8rem;
+  padding: 8px 4px;
+}
+
+.tc-tpl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tc-tpl-row__name {
+  flex: 1;
+  text-align: left;
+  background: var(--tc-surface-2);
+  border: 1px solid var(--tc-border);
+  border-radius: var(--tc-radius);
+  color: var(--tc-text);
+  font-family: var(--tc-font-mono);
+  font-size: 0.82rem;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.tc-tpl-row__name:hover {
+  border-color: var(--tc-accent);
+  color: var(--tc-accent);
+}
+
+.tc-tpl-sep {
+  border-top: 1px solid var(--tc-border);
+  margin: 4px 0 0;
+}
+
+.tc-tpl-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tc-gap);
+}
+
+/* -------------------------------------------------------------- */
 /* Month / year picker popover                                     */
 /* -------------------------------------------------------------- */
 

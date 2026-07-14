@@ -317,7 +317,7 @@ export function mountHeader(root, opts = {}) {
 /* ------------------------------------------------------------------ */
 
 export function openEventModal(root, opts = {}) {
-  const { model, event, dateISO, onSave, onDelete, canEdit } = opts;
+  const { model, event, dateISO, onSave, onDelete, canEdit, onManageTemplates } = opts;
   const isEdit = !!(event && event.id);
   const editable = canEdit !== false;
 
@@ -406,6 +406,45 @@ export function openEventModal(root, opts = {}) {
   });
   catSelect.style.color = catSelect.value ? categoryColor(model, catSelect.value) : '';
 
+  function applyTemplate(t) {
+    titleInput.value = t.title || '';
+    catSelect.value = t.category || '';
+    catSelect.style.color = catSelect.value ? categoryColor(model, catSelect.value) : '';
+    allDayInput.checked = !!t.allDay;
+    startInput.value = t.start || '';
+    endInput.value = t.end || '';
+    descArea.value = t.description || '';
+    syncAllDay();
+  }
+
+  // "Start from template" — only when creating a new event and able to edit.
+  let templateField = null;
+  if (!isEdit && editable) {
+    const tplSelect = el('select');
+    const blank = el('option', null, 'Blank event');
+    blank.value = '';
+    tplSelect.appendChild(blank);
+    for (const t of (model && model.templates) || []) {
+      const opt = el('option', null, t.name);
+      opt.value = t.id;
+      tplSelect.appendChild(opt);
+    }
+    const manageOpt = el('option', null, 'Manage templates…');
+    manageOpt.value = '__manage__';
+    tplSelect.appendChild(manageOpt);
+    tplSelect.addEventListener('change', () => {
+      if (tplSelect.value === '__manage__') {
+        tplSelect.value = '';
+        onManageTemplates && onManageTemplates();
+        return;
+      }
+      const t = ((model && model.templates) || []).find((x) => x.id === tplSelect.value);
+      if (t) applyTemplate(t);
+    });
+    templateField = field('Start from template', tplSelect);
+  }
+
+  if (templateField) form.append(templateField);
   form.append(titleField, dateField, allDayField, startField, endField, catField, descField);
 
   const footer = el('div', 'tc-modal__footer' + (isEdit && editable ? ' tc-modal__footer--split' : ''));
@@ -463,6 +502,158 @@ export function openEventModal(root, opts = {}) {
 
   focusFirst(dialog, editable ? titleInput : null);
 
+  return { close };
+}
+
+/* ------------------------------------------------------------------ */
+/* Template manager modal                                              */
+/* ------------------------------------------------------------------ */
+
+export function openTemplateManager(root, opts = {}) {
+  const { getModel, onSave, onDelete } = opts;
+  const titleId = 'tc-tpl-modal-title';
+
+  const header = el('div', 'tc-modal__header');
+  const titleEl = el('h2', 'tc-modal__title', 'Templates');
+  titleEl.id = titleId;
+  header.appendChild(titleEl);
+  const closeBtn = el('button', 'tc-btn tc-btn--icon', '×');
+  closeBtn.type = 'button';
+  closeBtn.setAttribute('aria-label', 'Close');
+  header.appendChild(closeBtn);
+
+  const body = el('div', 'tc-modal__form');
+  const listEl = el('div', 'tc-tpl-list');
+
+  const nameInput = el('input'); nameInput.type = 'text'; nameInput.required = true;
+  const titleInput = el('input'); titleInput.type = 'text';
+  const catSelect = el('select');
+  const allDayInput = el('input'); allDayInput.type = 'checkbox';
+  const startInput = el('input'); startInput.type = 'time';
+  const endInput = el('input'); endInput.type = 'time';
+  const descArea = el('textarea'); descArea.rows = 2;
+
+  const startField = field('Start', startInput);
+  const endField = field('End', endInput);
+  const allDayField = el('div', 'tc-modal__field tc-modal__field--inline');
+  const allDayId = 'tc-tplfield-allday-' + Math.random().toString(36).slice(2, 7);
+  allDayInput.id = allDayId;
+  const allDayLabel = el('label', null, 'All-day'); allDayLabel.htmlFor = allDayId;
+  allDayField.append(allDayInput, allDayLabel);
+
+  function syncAllDay() {
+    const hide = allDayInput.checked;
+    startField.hidden = hide;
+    endField.hidden = hide;
+  }
+  allDayInput.addEventListener('change', syncAllDay);
+
+  const form = el('form', 'tc-tpl-form');
+  form.append(
+    field('Template name', nameInput),
+    field('Default title', titleInput),
+    allDayField, startField, endField,
+    field('Category', catSelect),
+    field('Description', descArea),
+  );
+  const formFooter = el('div', 'tc-modal__footer tc-modal__footer--split');
+  const cancelEditBtn = el('button', 'tc-btn', 'Cancel edit');
+  cancelEditBtn.type = 'button';
+  const saveTplBtn = el('button', 'tc-btn tc-btn--primary', 'Add template');
+  saveTplBtn.type = 'submit';
+  formFooter.append(cancelEditBtn, saveTplBtn);
+  form.appendChild(formFooter);
+
+  body.append(listEl, el('div', 'tc-tpl-sep'), form);
+
+  const { dialog, close } = openModal(root, { titleId });
+  dialog.append(header, body);
+  closeBtn.addEventListener('click', () => close());
+
+  let editingId = null;
+
+  function renderCategoryOptions() {
+    const keep = catSelect.value;
+    catSelect.textContent = '';
+    const none = el('option', null, 'No category'); none.value = '';
+    catSelect.appendChild(none);
+    for (const c of (getModel().categories || [])) {
+      const o = el('option', null, c.label || c.id); o.value = c.id;
+      catSelect.appendChild(o);
+    }
+    catSelect.value = keep;
+  }
+
+  function resetForm() {
+    editingId = null;
+    nameInput.value = ''; titleInput.value = ''; catSelect.value = '';
+    allDayInput.checked = true; startInput.value = ''; endInput.value = ''; descArea.value = '';
+    syncAllDay();
+    saveTplBtn.textContent = 'Add template';
+    cancelEditBtn.hidden = true;
+  }
+
+  function loadForEdit(t) {
+    editingId = t.id;
+    nameInput.value = t.name; titleInput.value = t.title || ''; catSelect.value = t.category || '';
+    allDayInput.checked = !!t.allDay; startInput.value = t.start || ''; endInput.value = t.end || '';
+    descArea.value = t.description || '';
+    syncAllDay();
+    saveTplBtn.textContent = 'Save changes';
+    cancelEditBtn.hidden = false;
+    nameInput.focus();
+  }
+
+  function renderList() {
+    listEl.textContent = '';
+    const templates = getModel().templates || [];
+    if (!templates.length) {
+      listEl.appendChild(el('div', 'tc-tpl-empty', 'No templates yet — create one below.'));
+      return;
+    }
+    for (const t of templates) {
+      const row = el('div', 'tc-tpl-row');
+      const name = el('button', 'tc-tpl-row__name', t.name); name.type = 'button';
+      name.addEventListener('click', () => loadForEdit(t));
+      const del = el('button', 'tc-btn tc-btn--danger tc-btn--icon', '×');
+      del.type = 'button'; del.setAttribute('aria-label', 'Delete ' + t.name);
+      del.addEventListener('click', () => {
+        Promise.resolve(onDelete && onDelete(t.id)).then(() => {
+          if (editingId === t.id) resetForm();
+          renderList();
+        });
+      });
+      row.append(name, del);
+      listEl.appendChild(row);
+    }
+  }
+
+  cancelEditBtn.addEventListener('click', resetForm);
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!form.reportValidity()) return;
+    const allDay = allDayInput.checked;
+    const input = {
+      name: nameInput.value.trim(),
+      title: titleInput.value.trim(),
+      allDay,
+      start: allDay ? null : (startInput.value || null),
+      end: allDay ? null : (endInput.value || null),
+      category: catSelect.value || null,
+      description: descArea.value,
+    };
+    Promise.resolve(onSave && onSave(input, editingId)).then(() => {
+      resetForm();
+      renderCategoryOptions();
+      renderList();
+    });
+  });
+
+  renderCategoryOptions();
+  renderList();
+  resetForm();
+  focusFirst(dialog, nameInput);
   return { close };
 }
 

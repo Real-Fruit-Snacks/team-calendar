@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   emptyModel, validateEvent, addEvent, updateEvent, removeEvent,
   eventsForDate, agenda, eventMatches,
+  validateTemplate, addTemplate, updateTemplate, removeTemplate,
 } from '../assets/js/model.js';
 
 const seq = () => { let i = 0; return () => `evt_${i++}`; };
@@ -81,4 +82,37 @@ test('eventMatches: tolerates missing description/category', () => {
   const ev = { title: 'Standup', description: '', category: null };
   assert.equal(eventMatches(m, ev, 'stand'), true);
   assert.equal(eventMatches(m, ev, 'xyz'), false);
+});
+
+test('validateTemplate requires a name', () => {
+  assert.ok(validateTemplate({ name: '' }).includes('name required'));
+  assert.deepEqual(validateTemplate({ name: 'Deploy', allDay: true }), []);
+});
+
+test('addTemplate appends a normalized template and requires a name', () => {
+  let m = emptyModel();
+  m = addTemplate(m, { name: ' Deploy ', category: 'deploy', allDay: true, description: 'Cut branch' }, seq());
+  assert.equal(m.templates.length, 1);
+  assert.equal(m.templates[0].name, 'Deploy');
+  assert.equal(m.templates[0].id, 'evt_0');
+  assert.equal(m.templates[0].start, null);
+  assert.throws(() => addTemplate(m, { name: '' }));
+});
+
+test('addTemplate tolerates a model with no templates key', () => {
+  const m = addTemplate({ version: 1, categories: [], events: [] }, { name: 'X' }, () => 't1');
+  assert.deepEqual(m.templates.map(t => t.name), ['X']);
+});
+
+test('updateTemplate clears times when switched to all-day', () => {
+  let m = addTemplate(emptyModel(), { name: 'M', allDay: false, start: '09:00' }, () => 't1');
+  m = updateTemplate(m, 't1', { allDay: true });
+  assert.equal(m.templates[0].start, null);
+  assert.equal(m.templates[0].end, null);
+});
+
+test('removeTemplate drops by id', () => {
+  let m = addTemplate(emptyModel(), { name: 'M' }, () => 't1');
+  m = removeTemplate(m, 't1');
+  assert.equal(m.templates.length, 0);
 });

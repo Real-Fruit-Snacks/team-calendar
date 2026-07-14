@@ -1,6 +1,9 @@
 // assets/js/app.js — bootstrap: wires host/store/token/render/ui together.
-import { monthLabel, todayISO, addMonths } from './dates.js';
-import { addEvent, updateEvent, removeEvent } from './model.js';
+import { todayISO, addMonths } from './dates.js';
+import {
+  addEvent, updateEvent, removeEvent,
+  addTemplate, updateTemplate, removeTemplate,
+} from './model.js';
 import { createHost, detectHost } from './host.js';
 import { createStore } from './store.js';
 import { loadToken, saveToken, hasToken } from './token.js';
@@ -8,6 +11,7 @@ import { renderMonth, renderAgenda } from './render.js';
 import {
   mountHeader,
   openEventModal,
+  openTemplateManager,
   openTokenModal,
   setTheme,
   initTheme,
@@ -92,6 +96,41 @@ async function main() {
     });
   }
 
+  // Persist a template change through the store; returns the save promise so
+  // the manager can refresh its list once the commit lands.
+  function saveTemplateChange(mutator, message) {
+    header.setChip('saving');
+    return store
+      .save(mutator, loadToken(), message)
+      .then(() => {
+        header.setChip('editing');
+        render();
+      })
+      .catch((err) => {
+        header.setChip('error');
+        alert(err.message);
+        throw err;
+      });
+  }
+
+  function openTemplateFlow() {
+    openTemplateManager(document.body, {
+      getModel: () => store.get(),
+      onSave: (input, editingId) =>
+        saveTemplateChange(
+          (m) => (editingId ? updateTemplate(m, editingId, input) : addTemplate(m, input)),
+          editingId ? `Update template: ${input.name}` : `Add template: ${input.name}`
+        ),
+      onDelete: (id) => {
+        const t = (store.get().templates || []).find((x) => x.id === id);
+        return saveTemplateChange(
+          (m) => removeTemplate(m, id),
+          `Remove template: ${t ? t.name : id}`
+        );
+      },
+    });
+  }
+
   function handleDayClick(dateISO) {
     if (!state.canEdit) {
       openTokenFlow();
@@ -101,6 +140,7 @@ async function main() {
       model: store.get(),
       dateISO,
       canEdit: true,
+      onManageTemplates: openTemplateFlow,
       onSave: (input) => {
         header.setChip('saving');
         store

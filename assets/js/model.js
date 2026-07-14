@@ -1,5 +1,5 @@
 export function emptyModel() {
-  return { version: 1, categories: [], events: [] };
+  return { version: 1, categories: [], templates: [], events: [] };
 }
 
 export function makeId(rand = Math.random) {
@@ -68,6 +68,60 @@ export function agenda(model, fromISO) {
   return model.events
     .filter(e => e.date >= fromISO)
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : byTime(a, b)));
+}
+
+/* ---------------- Templates (presets for new events) ---------------- */
+
+export function makeTemplateId(rand = Math.random) {
+  return 'tpl_' + rand().toString(36).slice(2, 8).padEnd(6, '0');
+}
+
+export function validateTemplate(input) {
+  const errors = [];
+  if (!input || !input.name || !String(input.name).trim()) errors.push('name required');
+  if (input && !input.allDay) {
+    if (input.start && !/^\d{2}:\d{2}$/.test(input.start)) errors.push('start must be HH:MM');
+    if (input.end && !/^\d{2}:\d{2}$/.test(input.end)) errors.push('end must be HH:MM');
+  }
+  return errors;
+}
+
+function normalizeTemplate(input, id) {
+  const allDay = !!input.allDay;
+  return {
+    id,
+    name: String(input.name).trim(),
+    title: input.title ? String(input.title).trim() : '',
+    allDay,
+    start: allDay ? null : (input.start || null),
+    end: allDay ? null : (input.end || null),
+    category: input.category || null,
+    description: input.description || '',
+  };
+}
+
+export function addTemplate(model, input, idGen = makeTemplateId) {
+  const errors = validateTemplate(input);
+  if (errors.length) throw new Error(errors.join('; '));
+  const templates = model.templates || [];
+  return { ...model, templates: [...templates, normalizeTemplate(input, idGen())] };
+}
+
+export function updateTemplate(model, id, patch) {
+  const templates = model.templates || [];
+  return {
+    ...model,
+    templates: templates.map(t => {
+      if (t.id !== id) return t;
+      const merged = { ...t, ...patch };
+      if (merged.allDay) { merged.start = null; merged.end = null; }
+      return merged;
+    }),
+  };
+}
+
+export function removeTemplate(model, id) {
+  return { ...model, templates: (model.templates || []).filter(t => t.id !== id) };
 }
 
 // Case-insensitive substring match across title, description, and category label.
