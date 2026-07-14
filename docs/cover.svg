@@ -1,0 +1,58 @@
+<svg width="1280" height="360" viewBox="0 0 1280 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Team Calendar — a git-backed calendar you edit in the browser">
+  <defs>
+    <style>
+      .mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+    </style>
+  </defs>
+
+  <!-- background -->
+  <rect x="0" y="0" width="1280" height="360" fill="#14171c" />
+
+  <!-- top ANSI-accent rule -->
+  <rect x="0" y="0" width="1280" height="3" fill="#6cb6ff" />
+
+  <!-- minimal calendar-grid motif, right side, calm and thin -->
+  <g stroke="#2c333d" stroke-width="1" fill="none">
+    <!-- 7 columns x 4 rows grid, faint -->
+    <g transform="translate(860,70)">
+      <rect x="0" y="0" width="350" height="200" rx="4" stroke="#232830" />
+      <!-- vertical column lines -->
+      <line x1="50" y1="0" x2="50" y2="200" />
+      <line x1="100" y1="0" x2="100" y2="200" />
+      <line x1="150" y1="0" x2="150" y2="200" />
+      <line x1="200" y1="0" x2="200" y2="200" />
+      <line x1="250" y1="0" x2="250" y2="200" />
+      <line x1="300" y1="0" x2="300" y2="200" />
+      <!-- horizontal row lines -->
+      <line x1="0" y1="50" x2="350" y2="50" />
+      <line x1="0" y1="100" x2="350" y2="100" />
+      <line x1="0" y1="150" x2="350" y2="150" />
+    </g>
+    <!-- a single highlighted "today" cell -->
+    <rect x="1060" y="120" width="50" height="50" rx="2" fill="#1b1f26" stroke="#6cb6ff" />
+  </g>
+
+  <!-- terminal prompt glyph -->
+  <text x="70" y="96" class="mono" font-size="20" fill="#8b95a3">~/team-calendar &gt;</text>
+
+  <!-- title -->
+  <text x="70" y="170" class="mono" font-size="64" font-weight="600" fill="#d7dce3">Team Calendar<tspan fill="#6cb6ff">▮</tspan></text>
+
+  <!-- tagline -->
+  <text x="70" y="212" class="mono" font-size="22" fill="#8b95a3">a git-backed calendar you edit in the browser</text>
+
+  <!-- manifest strip -->
+  <g class="mono" font-size="16">
+    <circle cx="76" cy="290" r="4" fill="#6cb6ff" />
+    <text x="90" y="295" fill="#8b95a3">no backend</text>
+
+    <circle cx="256" cy="290" r="4" fill="#6cb6ff" />
+    <text x="270" y="295" fill="#8b95a3">github + gitlab pages</text>
+
+    <circle cx="536" cy="290" r="4" fill="#6cb6ff" />
+    <text x="550" y="295" fill="#8b95a3">dark + light</text>
+  </g>
+
+  <!-- bottom ANSI-accent rule -->
+  <rect x="0" y="357" width="1280" height="3" fill="#6cb6ff" opacity="0.5" />
+</svg>
