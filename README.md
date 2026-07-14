@@ -101,6 +101,23 @@ Because reading is a same-origin static fetch of `events.json`, there are no
 cross-origin/CORS calls and no API rate limits for viewers; the GitLab API is
 only used when someone saves an edit.
 
+### Serve it anywhere, with zero dependencies
+
+The app is a `fetch`-based SPA, so it must be served over HTTP (not opened as a
+`file://` path). The release contains **everything needed** — no CDN, no web
+fonts, no build step, nothing to download or `pip install`. If you're not using
+GitLab Pages, the bundled **`serve.py`** hosts it with only the Python 3 standard
+library:
+
+```bash
+python serve.py 8080     # then open http://localhost:8080
+```
+
+Any static file server works too (nginx, `python -m http.server`, etc.) — just
+point it at the folder. Everything the running app loads (`index.html`, the
+`assets/` JS/CSS, `config.json`, `events.json`, and inline SVG icons) is served
+from that folder; nothing is fetched from the internet.
+
 > **Note:** hosting on your own GitLab is a step you run on your instance — this
 > project can't push to a private GitLab for you. Everything needed is in the
 > repo and the release zip.
