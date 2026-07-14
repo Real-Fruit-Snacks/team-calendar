@@ -23,6 +23,12 @@ body {
   line-height: 1.4;
 }
 
+html {
+  -webkit-tap-highlight-color: transparent;
+  scrollbar-width: thin;
+  scrollbar-color: var(--tc-border) transparent;
+}
+
 button,
 input,
 select,
@@ -34,6 +40,31 @@ textarea {
 
 a {
   color: var(--tc-accent);
+}
+
+::selection {
+  background: var(--tc-accent);
+  color: var(--tc-bg);
+}
+
+/* Themed scrollbars (WebKit/Blink; Firefox uses scrollbar-* above). */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--tc-border);
+  border-radius: 999px;
+  border: 2px solid var(--tc-bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--tc-text-dim);
 }
 
 /* -------------------------------------------------------------- */
@@ -196,16 +227,6 @@ a:focus-visible {
 /* Month grid                                                      */
 /* -------------------------------------------------------------- */
 
-.tc-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
-  background: var(--tc-border);
-  border: 1px solid var(--tc-border);
-  border-radius: var(--tc-radius) var(--tc-radius) 0 0;
-  overflow: hidden;
-}
-
 .tc-weekday {
   background: var(--tc-surface-2);
   color: var(--tc-text-dim);
@@ -223,8 +244,7 @@ a:focus-visible {
   gap: 1px;
   background: var(--tc-border);
   border: 1px solid var(--tc-border);
-  border-top: none;
-  border-radius: 0 0 var(--tc-radius) var(--tc-radius);
+  border-radius: var(--tc-radius);
   overflow: hidden;
 }
 
@@ -265,28 +285,6 @@ a:focus-visible {
 .tc-cell--today .tc-cell__day {
   background: var(--tc-accent);
   color: var(--tc-bg);
-}
-
-.tc-cell__events {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  overflow: hidden;
-}
-
-.tc-cell__more {
-  font-family: var(--tc-font-mono);
-  font-size: 0.7rem;
-  color: var(--tc-text-dim);
-  background: none;
-  border: none;
-  text-align: left;
-  padding: 0 4px;
-  cursor: pointer;
-}
-
-.tc-cell__more:hover {
-  color: var(--tc-accent);
 }
 
 /* -------------------------------------------------------------- */
@@ -476,12 +474,44 @@ a:focus-visible {
   gap: 8px;
 }
 
-.tc-modal__field--inline input[type="checkbox"] {
-  width: auto;
+/* Custom checkbox — no native box. */
+.tc-modal input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 16px;
+  height: 16px;
   margin: 0;
+  border: 1px solid var(--tc-border);
+  border-radius: 4px;
+  background: var(--tc-surface-2);
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.tc-modal input[type="checkbox"]::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  transform: scale(0);
+  transition: transform 0.1s ease;
+  background: var(--tc-bg);
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
+.tc-modal input[type="checkbox"]:checked {
+  background: var(--tc-accent);
+  border-color: var(--tc-accent);
+}
+
+.tc-modal input[type="checkbox"]:checked::before {
+  transform: scale(1);
 }
 
 .tc-modal input[type="text"],
+.tc-modal input[type="password"],
 .tc-modal input[type="date"],
 .tc-modal input[type="time"],
 .tc-modal input[type="color"],
@@ -498,6 +528,29 @@ a:focus-visible {
 .tc-modal textarea {
   resize: vertical;
   min-height: 64px;
+}
+
+/* Custom select — replace the native dropdown arrow with a themed chevron. */
+.tc-modal select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238b95a3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  cursor: pointer;
+}
+
+/* Date/time picker button (icon color already follows color-scheme). */
+.tc-modal input[type="date"]::-webkit-calendar-picker-indicator,
+.tc-modal input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.tc-modal input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.tc-modal input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 .tc-modal input::placeholder,
@@ -536,17 +589,18 @@ a:focus-visible {
     padding: 2px;
   }
 
+  /* Day number on its own line, event dots wrapping in a row below. */
+  .tc-cell {
+    flex-flow: row wrap;
+    align-content: flex-start;
+  }
+
   .tc-cell__day {
     font-size: 0.72rem;
+    flex: 0 0 100%;
   }
 
   /* Collapse event pills into a compact colored-dot indicator. */
-  .tc-cell__events {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 2px;
-  }
-
   .tc-event {
     width: 6px;
     height: 6px;

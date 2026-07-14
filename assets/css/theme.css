@@ -5,6 +5,10 @@
   --tc-radius: 6px;
   --tc-gap: 8px;
 
+  /* Theme native UI (scrollbars, date/time pickers, spinners, form controls). */
+  color-scheme: dark;
+  accent-color: var(--tc-accent);
+
   /* Dark (default) — graphite surfaces */
   --tc-bg: #14171c;
   --tc-surface: #1b1f26;
@@ -18,7 +22,10 @@
   --tc-danger: #e5534b;
 }
 
+:root[data-theme="dark"] { color-scheme: dark; }
+
 :root[data-theme="light"] {
+  color-scheme: light;
   --tc-bg: #f4f5f7;
   --tc-surface: #ffffff;
   --tc-surface-2: #eceef1;
@@ -33,6 +40,7 @@
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
+    color-scheme: light;
     --tc-bg: #f4f5f7; --tc-surface: #ffffff; --tc-surface-2: #eceef1;
     --tc-border: #d5d9df; --tc-text: #1b1f26; --tc-text-dim: #5b6472;
     --tc-accent: #1f6feb; --tc-accent-warm: #b06a1c; --tc-today: #dbe7fb; --tc-danger: #cf322a;
