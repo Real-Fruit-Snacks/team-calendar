@@ -74,3 +74,40 @@ test('gitlab adapter builds files API URL with encoded path and projectId', asyn
   assert.match(calls[0], /gitlab\.internal\/api\/v4\/projects\/42\/repository\/files\/events\.json\?ref=main/);
   assert.equal(ref, 'lc1');
 });
+
+test('gitlab adapter getFile encodes path segments (space and slash)', async () => {
+  const calls = [];
+  const fetchImpl = async (url, opts) => {
+    calls.push(url);
+    return { ok: true, status: 200, json: async () => ({ content: encodeBase64('{}'), last_commit_id: 'lc1' }) };
+  };
+  const host = createHost({
+    location: { hostname: 'gitlab.internal', origin: 'https://gitlab.internal' },
+    config: { host: 'gitlab', projectId: '42', branch: 'main' }, fetchImpl,
+  });
+  await host.getFile('sub dir/events.json', 'tok');
+  assert.match(calls[0], /sub%20dir%2Fevents\.json/);
+});
+
+test('gitlab adapter putFile re-fetches after successful PUT and returns real commit ref', async () => {
+  const calls = [];
+  const fetchImpl = async (url, opts) => {
+    calls.push({ url, opts });
+    if (opts && opts.method === 'PUT') {
+      return { ok: true, status: 200, json: async () => ({}) };
+    }
+    return { ok: true, status: 200, json: async () => ({ content: encodeBase64('{}'), last_commit_id: 'lc2' }) };
+  };
+  const host = createHost({
+    location: { hostname: 'gitlab.internal', origin: 'https://gitlab.internal' },
+    config: { host: 'gitlab', projectId: '42', branch: 'main' }, fetchImpl,
+  });
+  const ref = await host.putFile('events.json', '{}', 'msg', 'tok', 'lc1');
+  assert.equal(calls.length, 2);
+  const putCall = calls.find(c => c.opts && c.opts.method === 'PUT');
+  const body = JSON.parse(putCall.opts.body);
+  assert.equal(body.last_commit_id, 'lc1');
+  assert.equal(body.commit_message, 'msg');
+  assert.equal(body.branch, 'main');
+  assert.equal(ref, 'lc2');
+});

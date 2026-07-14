@@ -66,26 +66,27 @@ function githubAdapter({ owner, repo, branch, fetchImpl }) {
 function gitlabAdapter({ origin, projectId, branch, fetchImpl }) {
   const base = `${origin}/api/v4/projects/${projectId}/repository/files`;
   const headers = (token) => (token ? { 'PRIVATE-TOKEN': token } : {});
-  return {
-    kind: 'gitlab',
-    async getFile(path, token) {
-      const enc = encodeURIComponent(path);
-      const res = await fetchImpl(`${base}/${enc}?ref=${branch}`, { headers: headers(token) });
-      if (!res.ok) throw conflictError(res.status, `getFile ${path}`);
-      const json = await res.json();
-      return { content: decodeBase64(json.content), ref: json.last_commit_id };
-    },
-    async putFile(path, content, message, token, ref) {
-      const enc = encodeURIComponent(path);
-      const res = await fetchImpl(`${base}/${enc}`, {
-        method: 'PUT',
-        headers: { ...headers(token), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ branch, content, commit_message: message, last_commit_id: ref }),
-      });
-      if (!res.ok) throw conflictError(res.status, `putFile ${path}`);
-      return `commit_${Date.now()}`; // GitLab update returns file path/branch; re-fetch supplies fresh ref on next load
-    },
-  };
+  async function getFile(path, token) {
+    const enc = encodeURIComponent(path);
+    const res = await fetchImpl(`${base}/${enc}?ref=${branch}`, { headers: headers(token) });
+    if (!res.ok) throw conflictError(res.status, `getFile ${path}`);
+    const json = await res.json();
+    return { content: decodeBase64(json.content), ref: json.last_commit_id };
+  }
+  async function putFile(path, content, message, token, ref) {
+    const enc = encodeURIComponent(path);
+    const res = await fetchImpl(`${base}/${enc}`, {
+      method: 'PUT',
+      headers: { ...headers(token), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ branch, content, commit_message: message, last_commit_id: ref }),
+    });
+    if (!res.ok) throw conflictError(res.status, `putFile ${path}`);
+    // GitLab's PUT response carries no commit id; re-fetch so the next
+    // optimistic-concurrency save sends a real last_commit_id, not a synthetic one.
+    const fresh = await getFile(path, token);
+    return fresh.ref;
+  }
+  return { kind: 'gitlab', getFile, putFile };
 }
 
 export function createHost({ location, config = {}, fetchImpl = fetch } = {}) {
