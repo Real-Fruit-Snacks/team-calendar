@@ -69,3 +69,16 @@ export function agenda(model, fromISO) {
     .filter(e => e.date >= fromISO)
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : byTime(a, b)));
 }
+
+// Case-insensitive substring match across title, description, and category label.
+// An empty query matches everything.
+export function eventMatches(model, event, query) {
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return true;
+  const cat = (model.categories || []).find(c => c.id === event.category);
+  const haystack = [event.title, event.description, cat && cat.label]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  return haystack.includes(q);
+}

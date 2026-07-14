@@ -50,6 +50,7 @@ async function main() {
     year: today.getFullYear(),
     month: today.getMonth(),
     canEdit: hasToken(),
+    search: '',
   };
 
   function currentChipForCanEdit() {
@@ -63,6 +64,7 @@ async function main() {
     if (state.view === 'agenda') {
       renderAgenda(contentRoot, model, {
         fromISO: todayISO(),
+        query: state.search,
         onEventClick: handleEventClick,
       });
     } else {
@@ -70,6 +72,7 @@ async function main() {
         year: state.year,
         month: state.month,
         todayISO: todayISO(),
+        query: state.search,
         onDayClick: handleDayClick,
         onEventClick: handleEventClick,
       });
@@ -182,6 +185,10 @@ async function main() {
     onToggleView: (view) => {
       state.view = view;
       header.setView(view);
+      render();
+    },
+    onSearch: (query) => {
+      state.search = query;
       render();
     },
     onToggleTheme: () => {

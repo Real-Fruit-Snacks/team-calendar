@@ -104,7 +104,7 @@ const CHIP_STATES = {
 };
 
 export function mountHeader(root, opts = {}) {
-  const { onPrev, onNext, onToday, onToggleView, onToggleTheme, onEditToken } = opts;
+  const { onPrev, onNext, onToday, onToggleView, onToggleTheme, onEditToken, onSearch } = opts;
 
   root.innerHTML = '';
   const header = el('div', 'tc-header');
@@ -140,6 +140,14 @@ export function mountHeader(root, opts = {}) {
   agendaBtn.addEventListener('click', () => onToggleView && onToggleView('agenda'));
   viewGroup.append(monthBtn, agendaBtn);
 
+  const searchGroup = el('div', 'tc-header__group tc-header__search');
+  const searchInput = el('input', 'tc-search');
+  searchInput.type = 'search';
+  searchInput.placeholder = 'Search events…';
+  searchInput.setAttribute('aria-label', 'Search events');
+  searchInput.addEventListener('input', () => onSearch && onSearch(searchInput.value));
+  searchGroup.appendChild(searchInput);
+
   const rightGroup = el('div', 'tc-header__group');
   const themeBtn = el('button', 'tc-btn tc-btn--theme', '');
   themeBtn.type = 'button';
@@ -151,7 +159,7 @@ export function mountHeader(root, opts = {}) {
   chip.addEventListener('click', () => onEditToken && onEditToken());
   rightGroup.append(themeBtn, chip);
 
-  header.append(nav, viewGroup, rightGroup);
+  header.append(nav, searchGroup, viewGroup, rightGroup);
   root.appendChild(header);
 
   function setLabel(text) {

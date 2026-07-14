@@ -118,6 +118,43 @@ a {
   gap: calc(var(--tc-gap) / 2);
 }
 
+.tc-header__search {
+  flex: 1 1 150px;
+  min-width: 120px;
+  max-width: 260px;
+}
+
+.tc-search {
+  width: 100%;
+  background: var(--tc-surface-2);
+  color: var(--tc-text);
+  border: 1px solid var(--tc-border);
+  border-radius: var(--tc-radius);
+  padding: 6px 10px;
+  font-family: var(--tc-font-mono);
+  font-size: 0.82rem;
+}
+
+.tc-search::placeholder {
+  color: var(--tc-text-dim);
+}
+
+/* Themed clear (×) button for the native search input. */
+.tc-search::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+  background-color: var(--tc-text-dim);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 2l8 8M10 2l-8 8' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 2l8 8M10 2l-8 8' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.tc-search::-webkit-search-cancel-button:hover {
+  background-color: var(--tc-text);
+}
+
 /* -------------------------------------------------------------- */
 /* Generic controls (buttons, inputs) used across header/modal     */
 /* -------------------------------------------------------------- */
@@ -598,6 +635,61 @@ a:focus-visible {
 
 .tc-modal__footer--split {
   justify-content: space-between;
+}
+
+/* -------------------------------------------------------------- */
+/* Hover / focus tooltip                                           */
+/* -------------------------------------------------------------- */
+
+.tc-tooltip {
+  position: fixed;
+  z-index: 200;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--tc-surface);
+  color: var(--tc-text);
+  border: 1px solid var(--tc-border);
+  border-radius: var(--tc-radius);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--tc-bg) 70%, transparent);
+  pointer-events: none;
+  font-size: 0.8rem;
+}
+
+.tc-tooltip__title {
+  font-family: var(--tc-font-mono);
+  font-weight: 600;
+}
+
+.tc-tooltip__meta {
+  font-family: var(--tc-font-mono);
+  font-size: 0.72rem;
+  color: var(--tc-text-dim);
+}
+
+.tc-tooltip__cat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--tc-text-dim);
+}
+
+.tc-tooltip__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.tc-tooltip__desc {
+  color: var(--tc-text);
+  white-space: pre-wrap;
+  border-top: 1px solid var(--tc-border);
+  padding-top: 4px;
+  margin-top: 2px;
 }
 
 /* -------------------------------------------------------------- */

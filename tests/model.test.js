@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   emptyModel, validateEvent, addEvent, updateEvent, removeEvent,
-  eventsForDate, agenda,
+  eventsForDate, agenda, eventMatches,
 } from '../assets/js/model.js';
 
 const seq = () => { let i = 0; return () => `evt_${i++}`; };
@@ -59,4 +59,26 @@ test('agenda returns future events in date then time order', () => {
   m = addEvent(m, { title: 'Past', date: '2026-06-01', allDay: true }, () => 'c');
   const list = agenda(m, '2026-07-01');
   assert.deepEqual(list.map(e => e.title), ['A', 'B']);
+});
+
+test('eventMatches: empty query matches everything', () => {
+  const m = { categories: [], events: [] };
+  assert.equal(eventMatches(m, { title: 'Anything' }, ''), true);
+  assert.equal(eventMatches(m, { title: 'Anything' }, '   '), true);
+});
+
+test('eventMatches: matches title, description, and category label (case-insensitive)', () => {
+  const m = { categories: [{ id: 'deploy', label: 'Deploy', color: '#e5534b' }], events: [] };
+  const ev = { title: 'Release 2.4', description: 'Cut the branch', category: 'deploy' };
+  assert.equal(eventMatches(m, ev, 'release'), true);   // title
+  assert.equal(eventMatches(m, ev, 'BRANCH'), true);    // description, case-insensitive
+  assert.equal(eventMatches(m, ev, 'deploy'), true);    // category label
+  assert.equal(eventMatches(m, ev, 'meeting'), false);  // no match
+});
+
+test('eventMatches: tolerates missing description/category', () => {
+  const m = { categories: [], events: [] };
+  const ev = { title: 'Standup', description: '', category: null };
+  assert.equal(eventMatches(m, ev, 'stand'), true);
+  assert.equal(eventMatches(m, ev, 'xyz'), false);
 });
