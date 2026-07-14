@@ -6,6 +6,55 @@ export function makeId(rand = Math.random) {
   return 'evt_' + rand().toString(36).slice(2, 8).padEnd(6, '0');
 }
 
+/* ---------------- Custom fields (per-template) ---------------- */
+
+export const FIELD_TYPES = ['text', 'textarea', 'url', 'select'];
+
+export function makeFieldId(rand = Math.random) {
+  return 'fld_' + rand().toString(36).slice(2, 8).padEnd(6, '0');
+}
+
+export function validateFieldDef(def) {
+  const errors = [];
+  if (!def || !def.label || !String(def.label).trim()) errors.push('field label required');
+  if (def && !FIELD_TYPES.includes(def.type)) errors.push('invalid field type');
+  if (def && def.type === 'select' &&
+      !(Array.isArray(def.options) && def.options.some(o => String(o).trim()))) {
+    errors.push('dropdown needs at least one option');
+  }
+  return errors;
+}
+
+// A field DEFINITION lives on a template: { id, label, type, options?, default }.
+function normalizeFieldDef(def, id) {
+  const type = FIELD_TYPES.includes(def.type) ? def.type : 'text';
+  const out = {
+    id: id || def.id,
+    label: String(def.label).trim(),
+    type,
+    default: def.default != null ? String(def.default) : '',
+  };
+  if (type === 'select') out.options = (def.options || []).map(o => String(o).trim()).filter(Boolean);
+  return out;
+}
+
+// A field VALUE lives on an event (snapshot): { id, label, type, options?, value }.
+function normalizeEventField(f) {
+  const type = FIELD_TYPES.includes(f.type) ? f.type : 'text';
+  const out = { id: f.id, label: f.label, type, value: f.value != null ? String(f.value) : '' };
+  if (type === 'select') out.options = (f.options || []).map(o => String(o)).filter(Boolean);
+  return out;
+}
+
+// Snapshot a template's field definitions into an event's initial field values.
+export function snapshotTemplateFields(template) {
+  return (template.fields || []).map(f => {
+    const out = { id: f.id, label: f.label, type: f.type, value: f.default || '' };
+    if (f.type === 'select') out.options = (f.options || []).slice();
+    return out;
+  });
+}
+
 export function validateEvent(input) {
   const errors = [];
   if (!input || !input.title || !String(input.title).trim()) errors.push('title required');
@@ -19,7 +68,7 @@ export function validateEvent(input) {
 
 function normalize(input, id) {
   const allDay = !!input.allDay;
-  return {
+  const ev = {
     id,
     title: String(input.title).trim(),
     date: input.date,
@@ -29,6 +78,11 @@ function normalize(input, id) {
     category: input.category || null,
     description: input.description || '',
   };
+  // Custom fields are snapshotted onto the event, but only when present — blank
+  // events stay lean in events.json.
+  const fields = (input.fields || []).map(normalizeEventField);
+  if (fields.length) ev.fields = fields;
+  return ev;
 }
 
 export function addEvent(model, input, idGen = makeId) {
@@ -44,6 +98,10 @@ export function updateEvent(model, id, patch) {
       if (e.id !== id) return e;
       const merged = { ...e, ...patch };
       if (merged.allDay) { merged.start = null; merged.end = null; }
+      if ('fields' in patch) {
+        const fields = (patch.fields || []).map(normalizeEventField);
+        if (fields.length) merged.fields = fields; else delete merged.fields;
+      }
       return merged;
     }),
   };
@@ -83,10 +141,13 @@ export function validateTemplate(input) {
     if (input.start && !/^\d{2}:\d{2}$/.test(input.start)) errors.push('start must be HH:MM');
     if (input.end && !/^\d{2}:\d{2}$/.test(input.end)) errors.push('end must be HH:MM');
   }
+  for (const f of (input && input.fields) || []) {
+    for (const e of validateFieldDef(f)) errors.push(e);
+  }
   return errors;
 }
 
-function normalizeTemplate(input, id) {
+function normalizeTemplate(input, id, idGen = makeFieldId) {
   const allDay = !!input.allDay;
   return {
     id,
@@ -97,6 +158,7 @@ function normalizeTemplate(input, id) {
     end: allDay ? null : (input.end || null),
     category: input.category || null,
     description: input.description || '',
+    fields: (input.fields || []).map(f => normalizeFieldDef(f, f.id || idGen())),
   };
 }
 
@@ -115,6 +177,10 @@ export function updateTemplate(model, id, patch) {
       if (t.id !== id) return t;
       const merged = { ...t, ...patch };
       if (merged.allDay) { merged.start = null; merged.end = null; }
+      if (patch.name != null) merged.name = String(patch.name).trim();
+      if ('fields' in patch) {
+        merged.fields = (patch.fields || []).map(f => normalizeFieldDef(f, f.id || makeFieldId()));
+      }
       return merged;
     }),
   };
@@ -124,13 +190,14 @@ export function removeTemplate(model, id) {
   return { ...model, templates: (model.templates || []).filter(t => t.id !== id) };
 }
 
-// Case-insensitive substring match across title, description, and category label.
-// An empty query matches everything.
+// Case-insensitive substring match across title, description, category label,
+// and any custom field labels/values. An empty query matches everything.
 export function eventMatches(model, event, query) {
   const q = String(query || '').trim().toLowerCase();
   if (!q) return true;
   const cat = (model.categories || []).find(c => c.id === event.category);
-  const haystack = [event.title, event.description, cat && cat.label]
+  const fieldText = (event.fields || []).map(f => `${f.label} ${f.value}`).join(' ');
+  const haystack = [event.title, event.description, cat && cat.label, fieldText]
     .filter(Boolean)
     .join(' ')
     .toLowerCase();

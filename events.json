@@ -8,10 +8,19 @@
   ],
   "templates": [
     { "id": "tpl_standup", "name": "Daily standup", "title": "Standup", "allDay": false, "start": "10:00", "end": "10:15", "category": "meeting", "description": "" },
-    { "id": "tpl_deploy", "name": "Deploy", "title": "", "allDay": true, "start": null, "end": null, "category": "deploy", "description": "Cut the release branch\nRun smoke tests" }
+    { "id": "tpl_deploy", "name": "Deploy", "title": "", "allDay": true, "start": null, "end": null, "category": "deploy", "description": "Cut the release branch\nRun smoke tests", "fields": [
+      { "id": "fld_version", "label": "Version", "type": "text", "default": "" },
+      { "id": "fld_ticket", "label": "Ticket", "type": "url", "default": "" },
+      { "id": "fld_priority", "label": "Priority", "type": "select", "options": ["Low", "Medium", "High"], "default": "Medium" }
+    ] }
   ],
   "events": [
     { "id": "evt_seed01", "title": "Team sync", "date": "2026-07-14", "allDay": false, "start": "10:00", "end": "10:30", "category": "meeting", "description": "Weekly standup" },
-    { "id": "evt_seed02", "title": "Release 1.0", "date": "2026-07-20", "allDay": true, "start": null, "end": null, "category": "deploy", "description": "Cut the release branch" }
+    { "id": "evt_seed02", "title": "Release 1.0", "date": "2026-07-20", "allDay": true, "start": null, "end": null, "category": "deploy", "description": "Cut the release branch" },
+    { "id": "evt_seed03", "title": "Deploy 2.4", "date": "2026-07-22", "allDay": true, "start": null, "end": null, "category": "deploy", "description": "Production deploy", "fields": [
+      { "id": "fld_version", "label": "Version", "type": "text", "value": "2.4.0" },
+      { "id": "fld_ticket", "label": "Ticket", "type": "url", "value": "https://example.com/PROJ-123" },
+      { "id": "fld_priority", "label": "Priority", "type": "select", "options": ["Low", "Medium", "High"], "value": "High" }
+    ] }
   ]
 }

@@ -640,6 +640,7 @@ a:focus-visible {
 
 .tc-modal input[type="text"],
 .tc-modal input[type="password"],
+.tc-modal input[type="url"],
 .tc-modal input[type="date"],
 .tc-modal input[type="time"],
 .tc-modal input[type="color"],
@@ -750,6 +751,38 @@ a:focus-visible {
   flex-direction: column;
   gap: var(--tc-gap);
 }
+
+/* Custom field-definition editor (inside the template manager) */
+.tc-fielddefs__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.tc-fielddefs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tc-fielddef {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--tc-border);
+  border-radius: var(--tc-radius);
+  background: var(--tc-surface-2);
+}
+
+.tc-fielddef__label { flex: 1 1 40%; min-width: 100px; }
+.tc-fielddef__type { flex: 1 1 30%; }
+.tc-fielddef__options,
+.tc-fielddef__default { flex: 1 1 100%; }
+.tc-fielddef .tc-btn--icon { flex: 0 0 auto; margin-left: auto; }
 
 /* -------------------------------------------------------------- */
 /* Month / year picker popover                                     */
@@ -877,6 +910,17 @@ a:focus-visible {
   border-top: 1px solid var(--tc-border);
   padding-top: 4px;
   margin-top: 2px;
+}
+
+.tc-tooltip__field {
+  font-size: 0.76rem;
+  color: var(--tc-text);
+  word-break: break-word;
+}
+
+.tc-tooltip__flabel {
+  color: var(--tc-text-dim);
+  font-family: var(--tc-font-mono);
 }
 
 /* -------------------------------------------------------------- */

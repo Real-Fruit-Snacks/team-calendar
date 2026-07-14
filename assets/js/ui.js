@@ -2,6 +2,7 @@
 import { createTokenURL } from './token.js';
 import { categoryColor } from './render.js';
 import { MONTHS, monthLabel } from './dates.js';
+import { snapshotTemplateFields, FIELD_TYPES } from './model.js';
 
 const THEME_KEY = 'tc_theme';
 
@@ -406,6 +407,50 @@ export function openEventModal(root, opts = {}) {
   });
   catSelect.style.color = catSelect.value ? categoryColor(model, catSelect.value) : '';
 
+  // Custom fields (per-template snapshot): editing shows the event's own fields;
+  // creating starts blank and fills when a template is applied.
+  let customFields = (event && Array.isArray(event.fields)) ? event.fields.map((f) => ({ ...f })) : [];
+  const customWrap = el('div', 'tc-custom-fields');
+  const customInputs = new Map();
+
+  function renderCustomFields() {
+    customWrap.textContent = '';
+    customInputs.clear();
+    for (const f of customFields) {
+      let control;
+      if (f.type === 'textarea') {
+        control = el('textarea');
+        control.rows = 2;
+      } else if (f.type === 'select') {
+        control = el('select');
+        const blank = el('option', null, '—');
+        blank.value = '';
+        control.appendChild(blank);
+        for (const o of f.options || []) {
+          const op = el('option', null, o);
+          op.value = o;
+          control.appendChild(op);
+        }
+      } else {
+        control = el('input');
+        control.type = f.type === 'url' ? 'url' : 'text';
+      }
+      control.value = f.value || '';
+      control.disabled = !editable;
+      customInputs.set(f.id, control);
+      customWrap.appendChild(field(f.label, control));
+    }
+  }
+
+  function collectCustomFields() {
+    return customFields.map((f) => {
+      const control = customInputs.get(f.id);
+      const out = { id: f.id, label: f.label, type: f.type, value: control ? control.value : (f.value || '') };
+      if (f.type === 'select') out.options = (f.options || []).slice();
+      return out;
+    });
+  }
+
   function applyTemplate(t) {
     titleInput.value = t.title || '';
     catSelect.value = t.category || '';
@@ -415,6 +460,8 @@ export function openEventModal(root, opts = {}) {
     endInput.value = t.end || '';
     descArea.value = t.description || '';
     syncAllDay();
+    customFields = snapshotTemplateFields(t);
+    renderCustomFields();
   }
 
   // "Start from template" — only when creating a new event and able to edit.
@@ -440,12 +487,14 @@ export function openEventModal(root, opts = {}) {
       }
       const t = ((model && model.templates) || []).find((x) => x.id === tplSelect.value);
       if (t) applyTemplate(t);
+      else { customFields = []; renderCustomFields(); }
     });
     templateField = field('Start from template', tplSelect);
   }
 
   if (templateField) form.append(templateField);
-  form.append(titleField, dateField, allDayField, startField, endField, catField, descField);
+  form.append(titleField, dateField, allDayField, startField, endField, catField, descField, customWrap);
+  renderCustomFields();
 
   const footer = el('div', 'tc-modal__footer' + (isEdit && editable ? ' tc-modal__footer--split' : ''));
   let deleteBtn = null;
@@ -495,6 +544,7 @@ export function openEventModal(root, opts = {}) {
       end: allDay ? null : (endInput.value || null),
       category: catSelect.value || null,
       description: descArea.value,
+      fields: collectCustomFields(),
     };
     onSave && onSave(input);
     close();
@@ -548,6 +598,70 @@ export function openTemplateManager(root, opts = {}) {
   }
   allDayInput.addEventListener('change', syncAllDay);
 
+  // ---- Custom field-definition editor ----
+  const TYPE_OPTIONS = [
+    { value: 'text', label: 'Short text' },
+    { value: 'textarea', label: 'Long text' },
+    { value: 'url', label: 'Link (URL)' },
+    { value: 'select', label: 'Dropdown' },
+  ];
+  const fieldsEditor = el('div', 'tc-fielddefs');
+  const fieldRows = [];
+
+  function addFieldRow(def) {
+    def = def || { label: '', type: 'text', options: [], default: '' };
+    const row = el('div', 'tc-fielddef');
+    const labelInput = el('input', 'tc-fielddef__label'); labelInput.type = 'text';
+    labelInput.placeholder = 'Field label'; labelInput.value = def.label || '';
+    const typeSelect = el('select', 'tc-fielddef__type');
+    for (const t of TYPE_OPTIONS) { const o = el('option', null, t.label); o.value = t.value; typeSelect.appendChild(o); }
+    typeSelect.value = FIELD_TYPES.includes(def.type) ? def.type : 'text';
+    const optionsInput = el('input', 'tc-fielddef__options'); optionsInput.type = 'text';
+    optionsInput.placeholder = 'Options, comma-separated'; optionsInput.value = (def.options || []).join(', ');
+    const defaultInput = el('input', 'tc-fielddef__default'); defaultInput.type = 'text';
+    defaultInput.placeholder = 'Default'; defaultInput.value = def.default || '';
+    const removeBtn = el('button', 'tc-btn tc-btn--danger tc-btn--icon', '×');
+    removeBtn.type = 'button'; removeBtn.setAttribute('aria-label', 'Remove field');
+
+    function syncType() { optionsInput.hidden = typeSelect.value !== 'select'; }
+    typeSelect.addEventListener('change', syncType); syncType();
+    removeBtn.addEventListener('click', () => {
+      row.remove();
+      const i = fieldRows.findIndex((r) => r.row === row);
+      if (i >= 0) fieldRows.splice(i, 1);
+    });
+
+    row.append(labelInput, typeSelect, optionsInput, defaultInput, removeBtn);
+    fieldRows.push({
+      row,
+      getDef() {
+        const type = typeSelect.value;
+        const d = { id: def.id, label: labelInput.value.trim(), type, default: defaultInput.value };
+        if (type === 'select') d.options = optionsInput.value.split(',').map((s) => s.trim()).filter(Boolean);
+        return d;
+      },
+    });
+    fieldsEditor.appendChild(row);
+  }
+
+  function collectFieldDefs() {
+    return fieldRows.map((r) => r.getDef()).filter((d) => d.label);
+  }
+
+  function clearFieldRows() {
+    fieldRows.length = 0;
+    fieldsEditor.textContent = '';
+  }
+
+  const fieldsSection = el('div', 'tc-modal__field');
+  const fieldsHead = el('div', 'tc-fielddefs__head');
+  fieldsHead.appendChild(el('label', null, 'Custom fields'));
+  const addFieldBtn = el('button', 'tc-btn', '+ Add field');
+  addFieldBtn.type = 'button';
+  addFieldBtn.addEventListener('click', () => addFieldRow());
+  fieldsHead.appendChild(addFieldBtn);
+  fieldsSection.append(fieldsHead, fieldsEditor);
+
   const form = el('form', 'tc-tpl-form');
   form.append(
     field('Template name', nameInput),
@@ -555,6 +669,7 @@ export function openTemplateManager(root, opts = {}) {
     allDayField, startField, endField,
     field('Category', catSelect),
     field('Description', descArea),
+    fieldsSection,
   );
   const formFooter = el('div', 'tc-modal__footer tc-modal__footer--split');
   const cancelEditBtn = el('button', 'tc-btn', 'Cancel edit');
@@ -588,6 +703,7 @@ export function openTemplateManager(root, opts = {}) {
     editingId = null;
     nameInput.value = ''; titleInput.value = ''; catSelect.value = '';
     allDayInput.checked = true; startInput.value = ''; endInput.value = ''; descArea.value = '';
+    clearFieldRows();
     syncAllDay();
     saveTplBtn.textContent = 'Add template';
     cancelEditBtn.hidden = true;
@@ -598,6 +714,8 @@ export function openTemplateManager(root, opts = {}) {
     nameInput.value = t.name; titleInput.value = t.title || ''; catSelect.value = t.category || '';
     allDayInput.checked = !!t.allDay; startInput.value = t.start || ''; endInput.value = t.end || '';
     descArea.value = t.description || '';
+    clearFieldRows();
+    for (const f of t.fields || []) addFieldRow(f);
     syncAllDay();
     saveTplBtn.textContent = 'Save changes';
     cancelEditBtn.hidden = false;
@@ -633,6 +751,12 @@ export function openTemplateManager(root, opts = {}) {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!form.reportValidity()) return;
+    const fields = collectFieldDefs();
+    const badDropdown = fields.find((d) => d.type === 'select' && !(d.options && d.options.length));
+    if (badDropdown) {
+      alert(`Dropdown field "${badDropdown.label}" needs at least one option.`);
+      return;
+    }
     const allDay = allDayInput.checked;
     const input = {
       name: nameInput.value.trim(),
@@ -642,6 +766,7 @@ export function openTemplateManager(root, opts = {}) {
       end: allDay ? null : (endInput.value || null),
       category: catSelect.value || null,
       description: descArea.value,
+      fields,
     };
     Promise.resolve(onSave && onSave(input, editingId)).then(() => {
       resetForm();

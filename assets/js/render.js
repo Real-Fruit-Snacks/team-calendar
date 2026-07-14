@@ -58,6 +58,14 @@ function showTooltip(anchor, model, ev) {
   }
   if (ev.description) tip.append(el('div', 'tc-tooltip__desc', ev.description));
 
+  for (const f of ev.fields || []) {
+    if (!f.value) continue;
+    const row = el('div', 'tc-tooltip__field');
+    row.append(el('span', 'tc-tooltip__flabel', `${f.label}: `));
+    row.append(el('span', null, f.value));
+    tip.append(row);
+  }
+
   tip.hidden = false;
   const a = anchor.getBoundingClientRect();
   const t = tip.getBoundingClientRect();
