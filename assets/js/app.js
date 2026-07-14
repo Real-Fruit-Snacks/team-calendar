@@ -266,3 +266,11 @@ async function main() {
 }
 
 main();
+
+// Register the service worker for offline use and PWA installability. Optional:
+// it's a progressive enhancement, so failure (e.g. insecure context) is ignored.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}

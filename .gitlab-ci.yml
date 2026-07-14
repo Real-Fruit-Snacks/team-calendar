@@ -12,7 +12,7 @@ pages:
   # image: busybox:latest   # uncomment on an air-gapped Docker runner if needed
   script:
     - mkdir -p public
-    - cp -r index.html assets events.json config.json public/
+    - cp -r index.html assets events.json config.json manifest.webmanifest sw.js icons public/
   artifacts:
     paths:
       - public

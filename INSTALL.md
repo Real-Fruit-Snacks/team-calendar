@@ -18,6 +18,9 @@ assets/css/*.css        styles (2 files)
 assets/js/*.js          the app (8 ES modules, no dependencies)
 events.json             your calendar data (edited in-browser)
 config.json             host settings (edit for GitLab — see below)
+manifest.webmanifest    PWA manifest (installable app)
+sw.js                   service worker (offline app shell)
+icons/                  app icons (192 / 512 px PNG)
 serve.py                zero-dependency static server (Python 3 stdlib)
 .gitlab-ci.yml          GitLab Pages deploy job (offline-safe)
 .github/workflows/…     GitHub Pages deploy (only if you use GitHub)
@@ -25,8 +28,13 @@ README.md, LICENSE      docs
 tests/                  unit tests (dev only; not needed to host)
 ```
 
-Nothing else is fetched at runtime. Every icon is an inline SVG; every script
-and style is loaded from `assets/`.
+Nothing else is fetched at runtime — no CDN, no web fonts. Every UI icon is an
+inline SVG; every script, style, and app icon is loaded from this folder.
+
+Once hosted over **HTTPS** (or opened on `localhost`), it can be **installed as
+an app** from a Chromium browser (Chrome/Edge → *Install*), and the service
+worker keeps it working offline after the first load. On HTTP-only hosting it
+still runs; the browser just won't offer to install it.
 
 ---
 

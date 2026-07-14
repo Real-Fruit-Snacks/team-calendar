@@ -28,8 +28,9 @@ build step, no database.
 - **Hover details** — point at any event for a popover with its full details
 - Category colors for at-a-glance scanning
 - Three themes — dark, light, and **workbench** (matches the [Terminal Workbench design system](https://github.com/Real-Fruit-Snacks/terminal-workbench-design-system)); cycle with the theme button
+- **Installable app (PWA)** — install it from your browser; a service worker caches the app shell so it opens and shows the last-synced calendar even offline
 - Runs on **GitHub Pages** and **GitLab Pages**
-- Offline / air-gapped hostable — no external services required
+- Offline / air-gapped hostable — no external services, CDNs, or web fonts; everything is bundled
 - Full edit history via git — every change is a real commit
 
 ## How it works
@@ -125,6 +126,25 @@ from that folder; nothing is fetched from the internet.
 > project can't push to a private GitLab for you. Everything needed is in the
 > repo and the release zip.
 
+## Install as an app (PWA)
+
+Team Calendar is a Progressive Web App. In a Chromium browser (Chrome/Edge),
+open the site and choose **Install app** (the install icon in the address bar,
+or the ⋮ menu → *Install*). It then runs in its own window with its own icon,
+like a native app.
+
+A bundled **service worker** (`sw.js`) precaches the app shell, so after the
+first visit it launches instantly and shows the **last-synced calendar even
+with no network**. Editing still needs the host (GitHub/GitLab) reachable, since
+saves commit through its API.
+
+Install requires a **secure context** — HTTPS, or `localhost`. GitHub Pages and
+most GitLab Pages instances serve HTTPS. If your internal GitLab Pages is
+HTTP-only the app still works; the browser just won't offer to install it.
+
+The PWA assets ship in the release (`manifest.webmanifest`, `sw.js`, `icons/`)
+and are all local — nothing is fetched from the internet.
+
 ## Data format
 
 Categories, templates, and events all live in `events.json`:
@@ -196,6 +216,11 @@ npm test
 
 There is no bundler, transpiler, or framework: `index.html` loads
 `assets/js/app.js` as a native ES module.
+
+Beyond the app modules, the repo bundles everything needed to host and install
+offline: `manifest.webmanifest` + `sw.js` + `icons/` (the PWA), `serve.py` (a
+zero-dependency static server), `.gitlab-ci.yml` and `.github/workflows/`
+(Pages deploys), and [INSTALL.md](INSTALL.md) (the offline deployment guide).
 
 ## License
 
