@@ -101,15 +101,54 @@ a {
   border-radius: var(--tc-radius);
 }
 
+.tc-header__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-right: auto;
+}
+
 .tc-header__title {
   font-family: var(--tc-font-mono);
   font-weight: 600;
   font-size: 1.05rem;
   letter-spacing: 0.02em;
   color: var(--tc-text);
-  margin-right: auto;
   white-space: nowrap;
 }
+
+/* Access status shown as a clickable subtitle under the title. */
+.tc-header__status {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--tc-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--tc-text-dim);
+}
+
+.tc-header__status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+.tc-header__status:hover {
+  text-decoration: underline;
+}
+
+.tc-header__status--editing { color: var(--tc-accent-warm); }
+.tc-header__status--saving { color: var(--tc-accent); }
+.tc-header__status--error { color: var(--tc-danger); }
 
 .tc-header__nav,
 .tc-header__group {
@@ -118,7 +157,8 @@ a {
   gap: calc(var(--tc-gap) / 2);
 }
 
-/* Fixed width + centered so changing months never shifts the ‹ › arrows. */
+/* Fixed width + centered so changing months never shifts the ‹ › arrows.
+   Clickable to open the month/year picker. */
 .tc-header__label {
   font-family: var(--tc-font-mono);
   font-size: 0.9rem;
@@ -126,6 +166,18 @@ a {
   text-align: center;
   min-width: 15ch;
   white-space: nowrap;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  cursor: pointer;
+  border-radius: var(--tc-radius);
+  text-decoration: underline dotted var(--tc-text-dim);
+  text-underline-offset: 4px;
+}
+
+.tc-header__label:hover {
+  color: var(--tc-accent);
+  background: var(--tc-surface-2);
 }
 
 .tc-header__search {
@@ -645,6 +697,79 @@ a:focus-visible {
 
 .tc-modal__footer--split {
   justify-content: space-between;
+}
+
+/* -------------------------------------------------------------- */
+/* Month / year picker popover                                     */
+/* -------------------------------------------------------------- */
+
+.tc-picker {
+  position: fixed;
+  z-index: 150;
+  width: 220px;
+  background: var(--tc-surface);
+  border: 1px solid var(--tc-border);
+  border-radius: var(--tc-radius);
+  padding: 10px;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--tc-bg) 70%, transparent);
+}
+
+.tc-picker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.tc-picker__heading {
+  flex: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--tc-font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--tc-text);
+  border-radius: var(--tc-radius);
+  padding: 4px;
+}
+
+.tc-picker__heading:hover {
+  background: var(--tc-surface-2);
+  color: var(--tc-accent);
+}
+
+.tc-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.tc-picker__cell {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--tc-radius);
+  cursor: pointer;
+  font-family: var(--tc-font-mono);
+  font-size: 0.8rem;
+  color: var(--tc-text);
+  padding: 8px 0;
+  text-align: center;
+}
+
+.tc-picker__cell:hover {
+  background: var(--tc-surface-2);
+}
+
+.tc-picker__cell--current {
+  border-color: var(--tc-text-dim);
+}
+
+.tc-picker__cell--selected {
+  background: var(--tc-today);
+  border-color: var(--tc-accent);
+  color: var(--tc-accent);
 }
 
 /* -------------------------------------------------------------- */

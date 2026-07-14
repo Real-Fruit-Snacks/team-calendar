@@ -59,7 +59,7 @@ async function main() {
 
   function render() {
     const model = store.get();
-    header.setLabel(monthLabel(state.year, state.month));
+    header.setPeriod(state.year, state.month);
     contentRoot.innerHTML = '';
     if (state.view === 'agenda') {
       renderAgenda(contentRoot, model, {
@@ -189,6 +189,11 @@ async function main() {
     },
     onSearch: (query) => {
       state.search = query;
+      render();
+    },
+    onJump: (year, month) => {
+      state.year = year;
+      state.month = month;
       render();
     },
     onToggleTheme: () => {

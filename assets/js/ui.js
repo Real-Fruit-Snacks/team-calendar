@@ -1,6 +1,7 @@
 // assets/js/ui.js
 import { createTokenURL } from './token.js';
 import { categoryColor } from './render.js';
+import { MONTHS, monthLabel } from './dates.js';
 
 const THEME_KEY = 'tc_theme';
 
@@ -103,12 +104,118 @@ const CHIP_STATES = {
   error: { cls: 'tc-chip--error', text: 'error' },
 };
 
+/* ------------------------------------------------------------------ */
+/* Month / year quick-picker (opens from the date label)               */
+/* ------------------------------------------------------------------ */
+
+let activePicker = null;
+
+function closeMonthPicker() {
+  if (activePicker) {
+    if (activePicker._cleanup) activePicker._cleanup();
+    activePicker.remove();
+    activePicker = null;
+  }
+}
+
+function openMonthPicker(anchor, curYear, curMonth, onJump) {
+  closeMonthPicker();
+  const today = new Date();
+  let viewYear = curYear;
+  let mode = 'month';
+
+  const pop = el('div', 'tc-picker');
+  pop.setAttribute('role', 'dialog');
+  pop.setAttribute('aria-label', 'Pick month and year');
+  document.body.appendChild(pop);
+
+  function position() {
+    const r = anchor.getBoundingClientRect();
+    const w = pop.offsetWidth || 220;
+    let left = r.left + r.width / 2 - w / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+    pop.style.top = `${r.bottom + 6}px`;
+    pop.style.left = `${left}px`;
+  }
+
+  function render() {
+    pop.textContent = '';
+    const head = el('div', 'tc-picker__head');
+    const prev = el('button', 'tc-btn tc-btn--icon', '‹');
+    const next = el('button', 'tc-btn tc-btn--icon', '›');
+    const heading = el('button', 'tc-picker__heading', '');
+    [prev, next, heading].forEach((b) => (b.type = 'button'));
+    prev.setAttribute('aria-label', 'Previous');
+    next.setAttribute('aria-label', 'Next');
+    head.append(prev, heading, next);
+    const grid = el('div', 'tc-picker__grid');
+    pop.append(head, grid);
+
+    if (mode === 'month') {
+      heading.textContent = String(viewYear);
+      heading.title = 'Pick a year';
+      heading.addEventListener('click', () => { mode = 'year'; render(); });
+      prev.addEventListener('click', () => { viewYear -= 1; render(); });
+      next.addEventListener('click', () => { viewYear += 1; render(); });
+      MONTHS.forEach((name, i) => {
+        const cell = el('button', 'tc-picker__cell', name.slice(0, 3));
+        cell.type = 'button';
+        if (viewYear === today.getFullYear() && i === today.getMonth()) cell.classList.add('tc-picker__cell--current');
+        if (viewYear === curYear && i === curMonth) cell.classList.add('tc-picker__cell--selected');
+        cell.addEventListener('click', () => { onJump(viewYear, i); closeMonthPicker(); });
+        grid.append(cell);
+      });
+    } else {
+      const base = viewYear - 5;
+      heading.textContent = `${base}–${base + 11}`;
+      heading.title = 'Back to months';
+      heading.addEventListener('click', () => { mode = 'month'; render(); });
+      prev.addEventListener('click', () => { viewYear -= 12; render(); });
+      next.addEventListener('click', () => { viewYear += 12; render(); });
+      for (let y = base; y < base + 12; y++) {
+        const cell = el('button', 'tc-picker__cell', String(y));
+        cell.type = 'button';
+        if (y === today.getFullYear()) cell.classList.add('tc-picker__cell--current');
+        if (y === curYear) cell.classList.add('tc-picker__cell--selected');
+        cell.addEventListener('click', () => { viewYear = y; mode = 'month'; render(); });
+        grid.append(cell);
+      }
+    }
+    position();
+  }
+
+  render();
+
+  function onDocDown(e) {
+    if (!pop.contains(e.target) && e.target !== anchor) closeMonthPicker();
+  }
+  function onKey(e) { if (e.key === 'Escape') { closeMonthPicker(); anchor.focus(); } }
+  setTimeout(() => {
+    document.addEventListener('mousedown', onDocDown);
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('resize', position);
+  }, 0);
+  pop._cleanup = () => {
+    document.removeEventListener('mousedown', onDocDown);
+    document.removeEventListener('keydown', onKey);
+    window.removeEventListener('resize', position);
+  };
+  activePicker = pop;
+}
+
 export function mountHeader(root, opts = {}) {
-  const { onPrev, onNext, onToday, onToggleView, onToggleTheme, onEditToken, onSearch } = opts;
+  const { onPrev, onNext, onToday, onToggleView, onToggleTheme, onEditToken, onSearch, onJump } = opts;
 
   root.innerHTML = '';
   const header = el('div', 'tc-header');
-  header.appendChild(el('div', 'tc-header__title', 'Team Calendar'));
+
+  const brand = el('div', 'tc-header__brand');
+  brand.appendChild(el('div', 'tc-header__title', 'Team Calendar'));
+  const statusEl = el('button', 'tc-header__status', '');
+  statusEl.type = 'button';
+  statusEl.setAttribute('aria-label', 'Access status — click to add or change your token');
+  statusEl.addEventListener('click', () => onEditToken && onEditToken());
+  brand.appendChild(statusEl);
 
   const nav = el('div', 'tc-header__nav');
   const prevBtn = el('button', 'tc-btn tc-btn--icon', '‹');
@@ -125,7 +232,12 @@ export function mountHeader(root, opts = {}) {
   nextBtn.setAttribute('aria-label', 'Next period');
   nextBtn.addEventListener('click', () => onNext && onNext());
 
-  const label = el('span', 'tc-header__label', '');
+  let curYear = new Date().getFullYear();
+  let curMonth = new Date().getMonth();
+  const label = el('button', 'tc-header__label', '');
+  label.type = 'button';
+  label.setAttribute('aria-label', 'Pick month and year');
+  label.addEventListener('click', () => openMonthPicker(label, curYear, curMonth, (y, m) => onJump && onJump(y, m)));
   nav.append(prevBtn, todayBtn, nextBtn, label);
 
   const viewGroup = el('div', 'tc-header__group');
@@ -152,35 +264,22 @@ export function mountHeader(root, opts = {}) {
   const themeBtn = el('button', 'tc-btn tc-btn--theme', '');
   themeBtn.type = 'button';
   themeBtn.addEventListener('click', () => onToggleTheme && onToggleTheme());
+  rightGroup.append(themeBtn);
 
-  const chip = el('button', 'tc-chip', '');
-  chip.type = 'button';
-  chip.setAttribute('aria-label', 'Edit access token');
-  chip.addEventListener('click', () => onEditToken && onEditToken());
-  rightGroup.append(themeBtn, chip);
-
-  header.append(nav, searchGroup, viewGroup, rightGroup);
+  header.append(brand, nav, searchGroup, viewGroup, rightGroup);
   root.appendChild(header);
 
-  function setLabel(text) {
-    label.textContent = text == null ? '' : text;
+  function setPeriod(year, month) {
+    curYear = year;
+    curMonth = month;
+    label.textContent = monthLabel(year, month);
   }
 
   function setChip(state) {
     const key = String(state || '').toLowerCase().replace(/[^a-z]/g, '');
     const entry = CHIP_STATES[key] || CHIP_STATES.readonly;
-    chip.className = 'tc-chip ' + entry.cls;
-    chip.textContent = entry.text;
-    // tc-chip--error has no dedicated token in app.css; force the danger
-    // color inline so the state stays visually distinct without needing
-    // a stylesheet change.
-    if (key === 'error') {
-      chip.style.color = 'var(--tc-danger)';
-      chip.style.borderColor = 'var(--tc-danger)';
-    } else {
-      chip.style.color = '';
-      chip.style.borderColor = '';
-    }
+    statusEl.className = 'tc-header__status tc-header__status--' + key;
+    statusEl.textContent = entry.text;
   }
 
   function setView(name) {
@@ -210,7 +309,7 @@ export function mountHeader(root, opts = {}) {
   setView('month');
   setTheme();
 
-  return { setLabel, setChip, setView, setTheme };
+  return { setPeriod, setChip, setView, setTheme };
 }
 
 /* ------------------------------------------------------------------ */
