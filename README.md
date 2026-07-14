@@ -70,20 +70,40 @@ else saved in between.
 
 ## Self-host on GitLab / offline
 
-Set `config.json` at the repo root:
+The app auto-detects its host, but on GitLab you point it at your instance and
+project. Set `config.json` at the repo root:
 
 ```json
 {
   "host": "gitlab",
-  "origin": "https://your-gitlab.example.com",
+  "origin": "https://gitlab.example.com",
   "projectId": 123,
   "branch": "main"
 }
 ```
 
-The included `.gitlab-ci.yml` publishes the static files to GitLab Pages —
-no internet access or npm install required, so it works on air-gapped GitLab
-instances too.
+- **`origin`** — your GitLab instance URL (no trailing slash). Read-only viewing
+  works with just this; it's used to build the token page link.
+- **`projectId`** — the numeric project ID, shown on the project's overview page
+  and under **Settings → General**. Required for editing (the API writes use it).
+- **`branch`** — the branch the calendar commits to (usually `main`).
+
+Then:
+
+1. Push this repo to a project on your GitLab instance.
+2. The included **`.gitlab-ci.yml`** publishes the static files to GitLab Pages
+   with a plain `cp` — **no internet access, no npm install, no build** — so it
+   runs on **air-gapped GitLab** too.
+3. Open the Pages URL. To edit, create a Personal Access Token with the **`api`**
+   scope (the in-app popup links straight to the pre-filled page) and paste it in.
+
+Because reading is a same-origin static fetch of `events.json`, there are no
+cross-origin/CORS calls and no API rate limits for viewers; the GitLab API is
+only used when someone saves an edit.
+
+> **Note:** hosting on your own GitLab is a step you run on your instance — this
+> project can't push to a private GitLab for you. Everything needed is in the
+> repo and the release zip.
 
 ## Data format
 
