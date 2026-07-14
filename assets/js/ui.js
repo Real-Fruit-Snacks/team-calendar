@@ -141,9 +141,8 @@ export function mountHeader(root, opts = {}) {
   viewGroup.append(monthBtn, agendaBtn);
 
   const rightGroup = el('div', 'tc-header__group');
-  const themeBtn = el('button', 'tc-btn tc-btn--icon', '◐');
+  const themeBtn = el('button', 'tc-btn tc-btn--theme', '');
   themeBtn.type = 'button';
-  themeBtn.setAttribute('aria-label', 'Toggle theme');
   themeBtn.addEventListener('click', () => onToggleTheme && onToggleTheme());
 
   const chip = el('button', 'tc-chip', '');
@@ -181,10 +180,29 @@ export function mountHeader(root, opts = {}) {
     agendaBtn.classList.toggle('tc-btn--active', name === 'agenda');
   }
 
+  function effectiveTheme() {
+    return (
+      document.documentElement.dataset.theme ||
+      (typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: light)').matches
+        ? 'light'
+        : 'dark')
+    );
+  }
+
+  function setTheme(name) {
+    const theme = name || effectiveTheme();
+    themeBtn.textContent = theme;
+    themeBtn.setAttribute('aria-label', `Theme: ${theme} (click to change)`);
+    themeBtn.title = `Theme: ${theme}`;
+  }
+
   setChip('readonly');
   setView('month');
+  setTheme();
 
-  return { setLabel, setChip, setView };
+  return { setLabel, setChip, setView, setTheme };
 }
 
 /* ------------------------------------------------------------------ */

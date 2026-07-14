@@ -21,7 +21,7 @@ build step, no database.
 
 - In-browser editing — create, edit, and delete events without leaving the page
 - Per-user Personal Access Token (PAT) access model — no shared credentials
-- Dark and light modes
+- Three themes — dark, light, and **workbench** (matches the [Terminal Workbench design system](https://github.com/Real-Fruit-Snacks/terminal-workbench-design-system)); cycle with the theme button
 - Month and agenda views
 - Category colors for at-a-glance scanning
 - Runs on **GitHub Pages** and **GitLab Pages**

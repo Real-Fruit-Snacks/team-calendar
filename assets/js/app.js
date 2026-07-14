@@ -185,12 +185,15 @@ async function main() {
       render();
     },
     onToggleTheme: () => {
+      const order = ['dark', 'light', 'workbench'];
       const current =
         document.documentElement.dataset.theme ||
         (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
           ? 'light'
           : 'dark');
-      setTheme(current === 'dark' ? 'light' : 'dark');
+      const next = order[(order.indexOf(current) + 1) % order.length];
+      setTheme(next);
+      header.setTheme(next);
     },
     onEditToken: () => openTokenFlow(),
   });

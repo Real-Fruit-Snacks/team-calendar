@@ -157,6 +157,21 @@ a:focus-visible {
   line-height: 1;
 }
 
+.tc-btn--theme {
+  text-transform: lowercase;
+  justify-content: flex-start;
+  min-width: 7em;
+}
+
+.tc-btn--theme::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tc-accent);
+}
+
 .tc-btn--active {
   background: var(--tc-today);
   border-color: var(--tc-accent);

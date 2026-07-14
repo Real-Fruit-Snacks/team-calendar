@@ -24,6 +24,23 @@
 
 :root[data-theme="dark"] { color-scheme: dark; }
 
+/* Workbench — matches the Terminal Workbench design system
+   (github.com/Real-Fruit-Snacks/terminal-workbench-design-system):
+   deep graphite surfaces with a mint ANSI accent. */
+:root[data-theme="workbench"] {
+  color-scheme: dark;
+  --tc-bg: #090c0d;
+  --tc-surface: #13191c;
+  --tc-surface-2: #182024;
+  --tc-border: #2a363d;
+  --tc-text: #dce4df;
+  --tc-text-dim: #879994;
+  --tc-accent: #63f2ab;
+  --tc-accent-warm: #f0c674;
+  --tc-today: #152a22;
+  --tc-danger: #ff6e7a;
+}
+
 :root[data-theme="light"] {
   color-scheme: light;
   --tc-bg: #f4f5f7;
