@@ -28,16 +28,16 @@ build step, no database.
 - **Hover details** — point at any event for a popover with its full details
 - Category colors for at-a-glance scanning
 - Three themes — dark, light, and **workbench** (matches the [Terminal Workbench design system](https://github.com/Real-Fruit-Snacks/terminal-workbench-design-system)); cycle with the theme button
-- **Installable app (PWA)** — install it from your browser; a service worker caches the app shell so it opens and shows the last-synced calendar even offline
+- **Installable app (PWA)** — install it from your browser; a service worker caches the app shell so it launches instantly and shows the last-synced calendar even when the server is unreachable
 - Runs on **GitHub Pages** and **GitLab Pages**
-- Offline / air-gapped hostable — no external services, CDNs, or web fonts; everything is bundled
+- Self-contained — no external services, CDNs, or web fonts; every file it needs ships with it
 - Full edit history via git — every change is a real commit
 
 ## How it works
 
 **Reading** the calendar is just a static file fetch: the page loads
 `events.json` as a plain same-origin file. This works identically on GitHub
-Pages, GitLab Pages, an air-gapped GitLab instance, or `localhost` — there
+Pages, GitLab Pages, a self-hosted GitLab instance, or `localhost` — there
 are no API rate limits, and read-only viewers don't need a token at all.
 
 **Editing** requires a Personal Access Token. The first time you try to
@@ -69,10 +69,10 @@ else saved in between.
    page pre-filled with the right scope. Paste the token back in, and edit
    away.
 
-## Self-host on GitLab / offline
+## Self-host on GitLab
 
-**Full step-by-step (including air-gapped GitLab) is in [INSTALL.md](INSTALL.md)**,
-which ships in the release. Quick version:
+**Full step-by-step is in [INSTALL.md](INSTALL.md)**, which ships in the
+release. Quick version:
 
 The app auto-detects its host, but on GitLab you point it at your instance and
 project. Set `config.json` at the repo root:
@@ -96,8 +96,7 @@ Then:
 
 1. Push this repo to a project on your GitLab instance.
 2. The included **`.gitlab-ci.yml`** publishes the static files to GitLab Pages
-   with a plain `cp` — **no internet access, no npm install, no build** — so it
-   runs on **air-gapped GitLab** too.
+   with a plain `cp` — **no build, no npm install, nothing to fetch**.
 3. Open the Pages URL. To edit, create a Personal Access Token with the **`api`**
    scope (the in-app popup links straight to the pre-filled page) and paste it in.
 
@@ -120,7 +119,7 @@ python serve.py 8080     # then open http://localhost:8080
 Any static file server works too (nginx, `python -m http.server`, etc.) — just
 point it at the folder. Everything the running app loads (`index.html`, the
 `assets/` JS/CSS, `config.json`, `events.json`, and inline SVG icons) is served
-from that folder; nothing is fetched from the internet.
+from that folder; nothing is loaded from anywhere else.
 
 > **Note:** hosting on your own GitLab is a step you run on your instance — this
 > project can't push to a private GitLab for you. Everything needed is in the
@@ -135,15 +134,15 @@ like a native app.
 
 A bundled **service worker** (`sw.js`) precaches the app shell, so after the
 first visit it launches instantly and shows the **last-synced calendar even
-with no network**. Editing still needs the host (GitHub/GitLab) reachable, since
-saves commit through its API.
+when the server is unreachable**. Editing still needs the host (GitHub/GitLab)
+reachable, since saves commit through its API.
 
 Install requires a **secure context** — HTTPS, or `localhost`. GitHub Pages and
 most GitLab Pages instances serve HTTPS. If your internal GitLab Pages is
 HTTP-only the app still works; the browser just won't offer to install it.
 
 The PWA assets ship in the release (`manifest.webmanifest`, `sw.js`, `icons/`)
-and are all local — nothing is fetched from the internet.
+and are all local — nothing is loaded from anywhere else.
 
 ## Data format
 
@@ -218,9 +217,9 @@ There is no bundler, transpiler, or framework: `index.html` loads
 `assets/js/app.js` as a native ES module.
 
 Beyond the app modules, the repo bundles everything needed to host and install
-offline: `manifest.webmanifest` + `sw.js` + `icons/` (the PWA), `serve.py` (a
+it: `manifest.webmanifest` + `sw.js` + `icons/` (the PWA), `serve.py` (a
 zero-dependency static server), `.gitlab-ci.yml` and `.github/workflows/`
-(Pages deploys), and [INSTALL.md](INSTALL.md) (the offline deployment guide).
+(Pages deploys), and [INSTALL.md](INSTALL.md) (the deployment guide).
 
 ## License
 
