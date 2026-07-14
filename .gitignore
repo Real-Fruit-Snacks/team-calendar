@@ -1,0 +1,17 @@
+# AI / process artifacts — never publish
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.claude/
+docs/superpowers/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Node (dev harness only)
+node_modules/
+npm-debug.log*

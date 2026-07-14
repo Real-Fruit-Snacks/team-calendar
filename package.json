@@ -1,0 +1,11 @@
+{
+  "name": "team-calendar",
+  "version": "1.0.0",
+  "description": "A static, git-backed team calendar you edit right in the browser.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
