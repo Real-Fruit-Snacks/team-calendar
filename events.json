@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "categories": [
+    { "id": "deploy", "label": "Deploy", "color": "#e5534b" },
+    { "id": "meeting", "label": "Meeting", "color": "#6cb6ff" },
+    { "id": "pto", "label": "PTO", "color": "#8ac26f" },
+    { "id": "oncall", "label": "On-call", "color": "#e5a05a" }
+  ],
+  "events": [
+    { "id": "evt_seed01", "title": "Team sync", "date": "2026-07-14", "allDay": false, "start": "10:00", "end": "10:30", "category": "meeting", "description": "Weekly standup" },
+    { "id": "evt_seed02", "title": "Release 1.0", "date": "2026-07-20", "allDay": true, "start": null, "end": null, "category": "deploy", "description": "Cut the release branch" }
+  ]
+}
